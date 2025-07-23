@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+import asyncio
 pygame.init()
 
 SCREEN_WIDTH = 300
@@ -98,50 +99,56 @@ def draw_winner():
     screen.blit(agian_img, (SCREEN_WIDTH//2 - 80, SCREEN_HEIGHT//2 + 10))
 
 
-run = True
-while run:
+async def main():
+    global player, markers, pos, winner, game_over, clicked
 
-    draw_grid()
-    draw_markers()
+    run = True
+    while run:
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        
-        if game_over == 0:
+        draw_grid()
+        draw_markers()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            
+            if game_over == False: #chnaged this
+                if event.type == pygame.MOUSEBUTTONDOWN and clicked == False:
+                    clicked = True
+                if event.type == pygame.MOUSEBUTTONUP and clicked == True:
+                    clicked = False
+                    pos = pygame.mouse.get_pos() #gives x and y co-ordinates of the mouse
+                    cell_x = pos[0]
+                    cell_y = pos[1]
+                    if markers[cell_x//100][cell_y//100] == 0:
+                        markers[cell_x//100][cell_y//100] = player
+                        player *= -1 #changes player
+                        check_winner()
+        if game_over == True:
+            draw_winner()
+            #chech if play again
             if event.type == pygame.MOUSEBUTTONDOWN and clicked == False:
                 clicked = True
             if event.type == pygame.MOUSEBUTTONUP and clicked == True:
                 clicked = False
-                pos = pygame.mouse.get_pos() #gives x and y co-ordinates of the mouse
-                cell_x = pos[0]
-                cell_y = pos[1]
-                if markers[cell_x//100][cell_y//100] == 0:
-                    markers[cell_x//100][cell_y//100] = player
-                    player *= -1 #changes player
-                    check_winner()
-    if game_over == True:
-        draw_winner()
-        #chech if play again
-        if event.type == pygame.MOUSEBUTTONDOWN and clicked == False:
-            clicked = True
-        if event.type == pygame.MOUSEBUTTONUP and clicked == True:
-            clicked = False
-            pos = pygame.mouse.get_pos()
-            if again_rect.collidepoint(pos):
-                #reset
-                player = 1
-                markers = []
-                pos = []
-                winner = 0
-                game_over = False
+                pos = pygame.mouse.get_pos()
+                if again_rect.collidepoint(pos):
+                    #reset
+                    player = 1
+                    
+                    markers = []
+                    pos = []
+                    winner = 0
+                    game_over = False
 
-                for i in range(3):
-                    row = [0]*3
-                    markers.append(row)
+                    for i in range(3):
+                        row = [0]*3
+                        markers.append(row)
 
 
-    pygame.display.update()
+        pygame.display.update()
+        await asyncio.sleep(0)
 
-pygame.quit()
+asyncio.run(main())
+pygame.quit() 
 
